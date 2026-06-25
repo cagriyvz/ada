@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ada'ya 💌</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { min-height: 100%; background: #1a0a2e; overflow-x: hidden; }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100dvh;
+      padding: 3rem 1rem 6rem;
+      position: relative;
+      background: #1a0a2e;
+    }
+
+    /* STARS */
+    .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+    .star { position:absolute; border-radius:50%; background:white; animation:twinkle linear infinite; }
+    @keyframes twinkle { 0%,100%{opacity:0.1;transform:scale(1);} 50%{opacity:1;transform:scale(1.5);} }
+
+    /* HEARTS */
+    .heart-particle { position:fixed; pointer-events:none; z-index:999; font-size:1.4rem; animation:floatUp 3.5s ease-out forwards; }
+    @keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(1);} 100%{opacity:0;transform:translateY(-280px) scale(0.2);} }
+
+    /* HINT */
+    .hint { position:relative; z-index:5; color:rgba(255,200,230,0.75); font-family:'Lato',sans-serif; font-size:0.85rem; letter-spacing:0.12em; margin-bottom:1.2rem; animation:pulse 2s ease-in-out infinite; user-select:none; text-align:center; }
+    @keyframes pulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+    /* ENVELOPE — SVG tabanlı, border trick yok */
+    .envelope-wrap {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .env-svg {
+      width: min(300px, 85vw);
+      filter: drop-shadow(0 8px 28px rgba(200,80,140,0.5));
+      transition: transform 0.2s;
+    }
+    .envelope-wrap:active .env-svg { transform: scale(0.97); }
+
+    /* flap animasyonu */
+    #flap {
+      transform-origin: 150px 0px;
+      transition: transform 0.85s cubic-bezier(.4,0,.2,1);
+    }
+    #flap.open { transform: rotateX(180deg); }
+
+    #env-heart-emoji {
+      transition: opacity 0.4s;
+    }
+
+    /* LETTER — açılınca gösterilir */
+    .letter-outer {
+      position: relative;
+      z-index: 5;
+      width: min(320px, 90vw);
+      margin-top: 1.5rem;
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+      display: none;
+    }
+    .letter-outer.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .letter {
+      background: #fff9f2;
+      border-radius: 12px;
+      padding: 1.8rem 1.4rem 1.4rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+      font-family: 'Dancing Script', cursive;
+      color: #5d2e46;
+      line-height: 1.8;
+      text-align: center;
+      border: 1px solid rgba(200,100,130,0.15);
+      max-height: 60vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .letter-name { font-size: clamp(1.3rem,5vw,1.6rem); font-weight:700; color:#c2185b; margin-bottom:0.8rem; display:block; }
+    .letter-body { color:#6b3550; font-size:clamp(0.88rem,3.5vw,1rem); line-height:1.9; }
+    .letter-footer { margin-top:1rem; font-size:clamp(1rem,4vw,1.1rem); color:#e91e8c; font-weight:700; display:block; }
+    .letter-rose { display:block; font-size:1.4rem; margin-top:0.5rem; }
+    .scroll-hint { text-align:center; font-family:'Lato',sans-serif; font-size:0.68rem; color:rgba(255,200,230,0.35); margin-top:0.5rem; letter-spacing:0.06em; }
+
+    /* COUNTER */
+    .counter-section { position:relative; z-index:5; margin-top:2rem; text-align:center; opacity:0; transform:translateY(24px); transition:opacity 0.9s,transform 0.9s; width:100%; }
+    .counter-section.show { opacity:1; transform:translateY(0); }
+    .counter-label { font-family:'Lato',sans-serif; color:rgba(255,200,230,0.6); font-size:0.73rem; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:1rem; }
+    .counter-grid { display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap; padding:0 0.5rem; }
+    .counter-box { background:rgba(255,255,255,0.06); border:1px solid rgba(255,100,160,0.25); border-radius:14px; padding:0.8rem 0.9rem; min-width:clamp(60px,18vw,75px); backdrop-filter:blur(6px); }
+    .counter-num { font-family:'Dancing Script',cursive; font-size:clamp(1.8rem,7vw,2.3rem); font-weight:700; color:#ff80ab; line-height:1; display:block; }
+    .counter-unit { font-family:'Lato',sans-serif; font-size:0.63rem; color:rgba(255,200,230,0.5); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-top:4px; }
+    .counter-sub { font-family:'Dancing Script',cursive; color:rgba(255,200,230,0.45); font-size:0.95rem; margin-top:1rem; }
+
+    /* MUSIC */
+    .music-bar { position:fixed; bottom:1.2rem; right:1rem; z-index:20; display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.07); border:1px solid rgba(255,100,160,0.3); border-radius:30px; padding:0.45rem 1rem; cursor:pointer; touch-action:manipulation; transition:background 0.2s; }
+    .music-bar:hover,.music-bar:active { background:rgba(255,255,255,0.13); }
+    .music-note { font-family:'Lato',sans-serif; font-size:0.72rem; color:rgba(255,200,230,0.8); }
+    .equalizer { display:flex; align-items:flex-end; gap:2px; height:16px; }
+    .eq-bar { width:3px; background:#ff80ab; border-radius:2px; animation:eq 0.8s ease-in-out infinite alternate; }
+    .eq-bar:nth-child(2){animation-delay:0.2s;} .eq-bar:nth-child(3){animation-delay:0.4s;} .eq-bar:nth-child(4){animation-delay:0.15s;}
+    @keyframes eq { from{height:3px;} to{height:14px;} }
+    .eq-bar.paused { animation-play-state:paused; height:4px !important; }
+    #sc-player { display:none; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="stars" id="stars"></div>
+
+  <!-- ENVELOPE -->
+  <p class="hint" id="hintText">✨ dokun, beni aç ✨</p>
+  <div class="envelope-wrap" id="envWrap" onclick="openEnvelope()" role="button" tabindex="0" aria-label="Zarfı aç">
+    <svg class="env-svg" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Zarf gövdesi -->
+      <rect x="0" y="0" width="300" height="200" rx="8" ry="8" fill="#c2185b"/>
+      <!-- Alt üçgen (V şekli) -->
+      <polygon points="0,200 150,110 300,200" fill="#9c1145"/>
+      <!-- Sol üçgen -->
+      <polygon points="0,0 0,200 120,100" fill="#ad1457"/>
+      <!-- Sağ üçgen -->
+      <polygon points="300,0 300,200 180,100" fill="#880e4f"/>
+      <!-- Üst kapak (flap) — açılır -->
+      <polygon id="flap" points="0,0 300,0 150,105" fill="#e91e8c"/>
+      <!-- Kalp -->
+      <text id="env-heart-emoji" x="150" y="120" text-anchor="middle" font-size="36" style="font-family:sans-serif;">💌</text>
+    </svg>
+  </div>
+
+  <!-- LETTER -->
+  <div class="letter-outer" id="letterOuter">
+    <div class="letter">
+      <span class="letter-name">Canım Ada,</span>
+      <span class="letter-body">
+        Hayatıma girdiğin günden beri her şey çok daha güzel ve anlamlı. Senin gülüşün, en yorucu günlerin bile ardından içimi ısıtmaya yetiyor.<br><br>
+        Bana hissettirdiğin bu huzur ve koşulsuz sevgi için sana ne kadar teşekkür etsem az. Birlikte geçirdiğimiz her an, kalbimde en değerli yerde saklı.<br><br>
+        Seni kelimelerin anlatabileceğinden çok daha fazla seviyorum.
+      </span>
+      <span class="letter-footer">İyi ki varsın, iyi ki benimlesin sevgilim.</span>
+      <span class="letter-rose">🌹</span>
+    </div>
+    <p class="scroll-hint">↕ kaydırarak okuyabilirsin</p>
+  </div>
+
+  <!-- COUNTER -->
+  <div class="counter-section" id="counterSection">
+    <p class="counter-label">seninle geçirdiğimiz zaman</p>
+    <div class="counter-grid">
+      <div class="counter-box"><span class="counter-num" id="cDays">0</span><span class="counter-unit">gün</span></div>
+      <div class="counter-box"><span class="counter-num" id="cHours">0</span><span class="counter-unit">saat</span></div>
+      <div class="counter-box"><span class="counter-num" id="cMins">0</span><span class="counter-unit">dakika</span></div>
+      <div class="counter-box"><span class="counter-num" id="cSecs">0</span><span class="counter-unit">saniye</span></div>
+    </div>
+    <p class="counter-sub">ve her biri kalbimde sonsuza kadar 🌸</p>
+  </div>
+</div>
+
+<iframe id="sc-player"
+  src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/takeiteasyrec/sherine-batmanna-ansak-tiktok-remix-2025&color=%23e91e8c&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"
+  width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"></iframe>
+
+<div class="music-bar" onclick="toggleMusic()">
+  <span style="font-size:1rem;">🎵</span>
+  <span class="music-note">Batmanna Ansak</span>
+  <div class="equalizer">
+    <div class="eq-bar paused"></div>
+    <div class="eq-bar paused"></div>
+    <div class="eq-bar paused"></div>
+    <div class="eq-bar paused"></div>
+  </div>
+</div>
+
+<script src="https://w.soundcloud.com/player/api.js"></script>
+<script>
+  // Yıldızlar
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random()*2.5+0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${(Math.random()*3+2).toFixed(1)}s;animation-delay:${(Math.random()*5).toFixed(1)}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // SoundCloud
+  let widget=null, playing=false;
+  const eqBars = document.querySelectorAll('.eq-bar');
+  function initSC() {
+    if (typeof SC==='undefined'||widget) return;
+    try {
+      widget = SC.Widget(document.getElementById('sc-player'));
+      widget.bind(SC.Widget.Events.READY, ()=>widget.setVolume(80));
+      widget.bind(SC.Widget.Events.PLAY,  ()=>{ playing=true;  eqBars.forEach(b=>b.classList.remove('paused')); });
+      widget.bind(SC.Widget.Events.PAUSE, ()=>{ playing=false; eqBars.forEach(b=>b.classList.add('paused')); });
+      widget.bind(SC.Widget.Events.FINISH,()=>{ widget.seekTo(0); widget.play(); });
+    } catch(e){}
+  }
+  window.addEventListener('load', ()=>setTimeout(initSC,800));
+
+  function tryPlay() { if(!widget){initSC();setTimeout(tryPlay,1000);return;} widget.play(); }
+  function toggleMusic() { if(!widget){initSC();setTimeout(()=>widget&&widget.play(),800);return;} playing?widget.pause():widget.play(); }
+
+  // Kalp yağmuru
+  const emojis=['💗','💖','💕','🌸','✨','💓','🌹','💝'];
+  function spawnHeart() {
+    const h=document.createElement('div');
+    h.className='heart-particle';
+    h.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    h.style.left=(Math.random()*86+4)+'vw';
+    h.style.bottom='0';
+    h.style.animationDuration=(Math.random()*1.8+2.5)+'s';
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),4500);
+  }
+  function startHeartRain() {
+    for(let i=0;i<5;i++) setTimeout(spawnHeart,i*150);
+    const iv=setInterval(spawnHeart,350);
+    setTimeout(()=>clearInterval(iv),7000);
+  }
+
+  // Zarf aç
+  let opened=false;
+  function openEnvelope() {
+    if(opened) return;
+    opened=true;
+
+    // hint kaybol
+    document.getElementById('hintText').style.transition='opacity 0.4s';
+    document.getElementById('hintText').style.opacity='0';
+
+    // flap aç
+    document.getElementById('flap').classList.add('open');
+
+    // kalp kaybol
+    setTimeout(()=>{
+      document.getElementById('env-heart-emoji').style.opacity='0';
+    }, 350);
+
+    // zarf kaybol, mektup belir
+    setTimeout(()=>{
+      const wrap = document.getElementById('envWrap');
+      wrap.style.transition='opacity 0.5s, transform 0.5s';
+      wrap.style.opacity='0';
+      wrap.style.transform='scale(0.9)';
+    }, 800);
+
+    setTimeout(()=>{
+      document.getElementById('envWrap').style.display='none';
+      document.getElementById('hintText').style.display='none';
+
+      const lo=document.getElementById('letterOuter');
+      lo.style.display='block';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>lo.classList.add('show')));
+    }, 1300);
+
+    // sayaç + kalpler + müzik
+    setTimeout(()=>{
+      document.getElementById('counterSection').classList.add('show');
+      startHeartRain();
+      tryPlay();
+    }, 1800);
+  }
+
+  document.getElementById('envWrap').addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' ') openEnvelope();
+  });
+
+  // Sayaç
+  const startDate=new Date(2025,10,24);
+  function updateCounter() {
+    const diff=Math.max(0,Date.now()-startDate.getTime());
+    document.getElementById('cDays').textContent  =Math.floor(diff/86400000);
+    document.getElementById('cHours').textContent =Math.floor((diff%86400000)/3600000);
+    document.getElementById('cMins').textContent  =Math.floor((diff%3600000)/60000);
+    document.getElementById('cSecs').textContent  =Math.floor((diff%60000)/1000);
+  }
+  updateCounter();
+  setInterval(updateCounter,1000);
+</script>
+</body>
+</html>
