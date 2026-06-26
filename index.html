@@ -1,299 +1,570 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ada'ya 💌</title>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { min-height: 100%; background: #1a0a2e; overflow-x: hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ada — Bir Film</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IM+Fell+English:ital@1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#0d0a06;overflow:hidden;}
 
-    #app {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100dvh;
-      padding: 3rem 1rem 6rem;
-      position: relative;
-      background: #1a0a2e;
-    }
+#stage{width:100%;height:100vh;position:relative;overflow:hidden;}
 
-    /* STARS */
-    .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
-    .star { position:absolute; border-radius:50%; background:white; animation:twinkle linear infinite; }
-    @keyframes twinkle { 0%,100%{opacity:0.1;transform:scale(1);} 50%{opacity:1;transform:scale(1.5);} }
+#grain{position:fixed;top:0;left:0;width:100%;height:100%;z-index:200;pointer-events:none;opacity:0.07;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+#vignette{position:fixed;top:0;left:0;width:100%;height:100%;z-index:199;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 25%,rgba(0,0,0,0.92) 100%);}
+.bar{position:fixed;left:0;width:100%;background:#0d0a06;z-index:198;}
+#bt{top:0;height:9%;}
+#bb{bottom:0;height:9%;}
+.scratch{position:fixed;top:0;width:1px;background:rgba(255,240,180,0.12);z-index:201;animation:sc 5s linear infinite;}
+@keyframes sc{0%{height:0;opacity:0;}15%{opacity:1;}85%{opacity:0.3;}100%{height:100%;opacity:0;}}
 
-    /* HEARTS */
-    .heart-particle { position:fixed; pointer-events:none; z-index:999; font-size:1.4rem; animation:floatUp 3.5s ease-out forwards; }
-    @keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(1);} 100%{opacity:0;transform:translateY(-280px) scale(0.2);} }
+/* ── GENEL SAHNE SİSTEMİ ── */
+.scene{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;pointer-events:none;transition:opacity 1.8s ease;}
+.scene.active{opacity:1;pointer-events:auto;}
 
-    /* HINT */
-    .hint { position:relative; z-index:5; color:rgba(255,200,230,0.75); font-family:'Lato',sans-serif; font-size:0.85rem; letter-spacing:0.12em; margin-bottom:1.2rem; animation:pulse 2s ease-in-out infinite; user-select:none; text-align:center; }
-    @keyframes pulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+/* ── ALTYAZI ── */
+#sub{position:fixed;bottom:11%;left:50%;transform:translateX(-50%);font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(10px,3vw,15px);color:#e8d5a3;text-align:center;opacity:0;transition:opacity 0.5s;z-index:202;white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,1);pointer-events:none;}
+#sub.show{opacity:1;}
 
-    /* ENVELOPE — SVG tabanlı, border trick yok */
-    .envelope-wrap {
-      position: relative;
-      z-index: 5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      touch-action: manipulation;
-      user-select: none;
-    }
+/* ── KONUŞMA BALONLARI ── */
+.bubble{position:absolute;background:rgba(13,10,6,0.75);border:1px solid rgba(232,213,163,0.25);border-radius:10px;padding:clamp(5px,1.5vw,9px) clamp(8px,2vw,14px);font-family:'Lato',sans-serif;font-size:clamp(8px,2.2vw,11px);color:#e8d5a3;line-height:1.5;opacity:0;transition:opacity 0.5s,transform 0.5s;transform:translateY(8px);z-index:20;pointer-events:none;max-width:clamp(100px,35vw,190px);text-align:center;backdrop-filter:blur(4px);}
+.bubble.show{opacity:1;transform:translateY(0);}
 
-    .env-svg {
-      width: min(300px, 85vw);
-      filter: drop-shadow(0 8px 28px rgba(200,80,140,0.5));
-      transition: transform 0.2s;
-    }
-    .envelope-wrap:active .env-svg { transform: scale(0.97); }
+/* ── SİYAH EKRAN / ARA YAZI ── */
+#blackscreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0a06;z-index:300;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:opacity 1.2s ease;}
+#blackscreen.show{opacity:1;pointer-events:auto;}
+#bstxt{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1.5rem,7vw,3rem);color:#e8d5a3;letter-spacing:0.1em;opacity:0;transition:opacity 1s ease;}
+#bstxt.show{opacity:1;}
 
-    /* flap animasyonu */
-    #flap {
-      transform-origin: 150px 0px;
-      transition: transform 0.85s cubic-bezier(.4,0,.2,1);
-    }
-    #flap.open { transform: rotateX(180deg); }
+/* ── SAHNE 1: DURAK (öğlen) ── */
+#s-durak{background:linear-gradient(180deg,#87CEEB 0%,#b8d4e8 35%,#d4a870 60%,#c8956a 75%,#3a2a14 100%);}
+#sky1{position:absolute;top:9%;left:0;width:100%;height:45%;background:linear-gradient(180deg,#87CEEB 0%,#b8d4e8 60%,#e8c878 100%);}
+#sun{position:absolute;top:15%;left:22%;width:clamp(30px,8vw,50px);height:clamp(30px,8vw,50px);border-radius:50%;background:#FFD700;box-shadow:0 0 30px rgba(255,215,0,0.6),0 0 60px rgba(255,200,0,0.3);}
+/* Binalar arka plan */
+.bldg{position:absolute;bottom:38%;background:#5a4a3a;}
+#b1{left:2%;width:8%;height:22%;border-radius:2px 2px 0 0;}
+#b2{left:11%;width:6%;height:16%;}
+#b3{right:5%;width:9%;height:19%;border-radius:2px 2px 0 0;}
+#b4{right:15%;width:5%;height:14%;}
+/* Bina pencereleri */
+.bwin{position:absolute;background:rgba(255,220,100,0.3);border:1px solid rgba(200,180,100,0.2);}
 
-    #env-heart-emoji {
-      transition: opacity 0.4s;
-    }
+#ground1{position:absolute;bottom:9%;left:0;width:100%;height:32%;background:linear-gradient(180deg,#8B7355 0%,#6b5a3a 100%);}
+#sidewalk1{position:absolute;bottom:9%;left:0;width:100%;height:16%;background:linear-gradient(180deg,#a09070 0%,#8a7860 100%);border-top:2px solid #b0a080;}
+#road1{position:absolute;bottom:9%;left:0;width:100%;height:7%;background:#555040;border-top:1px solid #666050;}
 
-    /* LETTER — açılınca gösterilir */
-    .letter-outer {
-      position: relative;
-      z-index: 5;
-      width: min(320px, 90vw);
-      margin-top: 1.5rem;
-      opacity: 0;
-      transform: translateY(20px) scale(0.97);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-      display: none;
-    }
-    .letter-outer.show {
-      display: block;
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+#spole{position:absolute;bottom:24%;left:50%;width:3px;height:26%;background:linear-gradient(180deg,#aaa090,#6a6050);transform:translateX(-50%);}
+#sboard{position:absolute;bottom:48%;left:50%;transform:translateX(-50%);background:#FFD700;padding:3px 9px;border-radius:3px;font-family:'Lato',sans-serif;font-size:clamp(6px,1.8vw,10px);color:#3a2a00;letter-spacing:0.1em;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+#bench1{position:absolute;bottom:25%;left:50%;transform:translateX(-50%);width:clamp(90px,28vw,160px);height:clamp(7px,1.5vw,11px);background:#7a6040;border-radius:2px;box-shadow:0 3px 0 #5a4a2a;}
+#bl1a{position:absolute;bottom:calc(25% - clamp(12px,3vw,20px));left:calc(50% - clamp(34px,9vw,58px));width:clamp(4px,1vw,6px);height:clamp(12px,3vw,20px);background:#6a5030;}
+#bl1b{position:absolute;bottom:calc(25% - clamp(12px,3vw,20px));left:calc(50% + clamp(29px,8vw,52px));width:clamp(4px,1vw,6px);height:clamp(12px,3vw,20px);background:#6a5030;}
 
-    .letter {
-      background: #fff9f2;
-      border-radius: 12px;
-      padding: 1.8rem 1.4rem 1.4rem;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.45);
-      font-family: 'Dancing Script', cursive;
-      color: #5d2e46;
-      line-height: 1.8;
-      text-align: center;
-      border: 1px solid rgba(200,100,130,0.15);
-      max-height: 60vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+.character{position:absolute;bottom:calc(25% + clamp(6px,1.5vw,11px));display:flex;flex-direction:column;align-items:center;}
+#woman1{left:calc(50% - clamp(50px,13vw,88px));transform:translateX(-50%);animation:idleW 4s ease-in-out infinite;}
+#man1{left:calc(50% + clamp(8px,3vw,28px));transform:translateX(-50%);animation:idleM 4s ease-in-out infinite;animation-delay:0.6s;}
+@keyframes idleW{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-2px);}}
+@keyframes idleM{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-2px);}}
+.char-svg{width:clamp(28px,8vw,50px);height:auto;}
 
-    .letter-name { font-size: clamp(1.3rem,5vw,1.6rem); font-weight:700; color:#c2185b; margin-bottom:0.8rem; display:block; }
-    .letter-body { color:#6b3550; font-size:clamp(0.88rem,3.5vw,1rem); line-height:1.9; }
-    .letter-footer { margin-top:1rem; font-size:clamp(1rem,4vw,1.1rem); color:#e91e8c; font-weight:700; display:block; }
-    .letter-rose { display:block; font-size:1.4rem; margin-top:0.5rem; }
-    .scroll-hint { text-align:center; font-family:'Lato',sans-serif; font-size:0.68rem; color:rgba(255,200,230,0.35); margin-top:0.5rem; letter-spacing:0.06em; }
+#bw1{bottom:102%;left:-5px;}
+#bm1{bottom:102%;right:-5px;}
+#bw2{bottom:102%;left:-5px;}
+#bm2{bottom:102%;right:-5px;}
+#bw3{bottom:102%;left:-5px;}
+#bm3{bottom:102%;right:-5px;}
+#bw4{bottom:102%;left:-5px;}
 
-    /* COUNTER */
-    .counter-section { position:relative; z-index:5; margin-top:2rem; text-align:center; opacity:0; transform:translateY(24px); transition:opacity 0.9s,transform 0.9s; width:100%; }
-    .counter-section.show { opacity:1; transform:translateY(0); }
-    .counter-label { font-family:'Lato',sans-serif; color:rgba(255,200,230,0.6); font-size:0.73rem; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:1rem; }
-    .counter-grid { display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap; padding:0 0.5rem; }
-    .counter-box { background:rgba(255,255,255,0.06); border:1px solid rgba(255,100,160,0.25); border-radius:14px; padding:0.8rem 0.9rem; min-width:clamp(60px,18vw,75px); backdrop-filter:blur(6px); }
-    .counter-num { font-family:'Dancing Script',cursive; font-size:clamp(1.8rem,7vw,2.3rem); font-weight:700; color:#ff80ab; line-height:1; display:block; }
-    .counter-unit { font-family:'Lato',sans-serif; font-size:0.63rem; color:rgba(255,200,230,0.5); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-top:4px; }
-    .counter-sub { font-family:'Dancing Script',cursive; color:rgba(255,200,230,0.45); font-size:0.95rem; margin-top:1rem; }
+.smoke-p{position:absolute;border-radius:50%;background:rgba(200,190,170,0.18);animation:smokeUp 3s ease-out forwards;pointer-events:none;}
+@keyframes smokeUp{0%{transform:translateY(0) scale(1);opacity:0.5;}100%{transform:translateY(-55px) scale(3);opacity:0;}}
 
-    /* MUSIC */
-    .music-bar { position:fixed; bottom:1.2rem; right:1rem; z-index:20; display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.07); border:1px solid rgba(255,100,160,0.3); border-radius:30px; padding:0.45rem 1rem; cursor:pointer; touch-action:manipulation; transition:background 0.2s; }
-    .music-bar:hover,.music-bar:active { background:rgba(255,255,255,0.13); }
-    .music-note { font-family:'Lato',sans-serif; font-size:0.72rem; color:rgba(255,200,230,0.8); }
-    .equalizer { display:flex; align-items:flex-end; gap:2px; height:16px; }
-    .eq-bar { width:3px; background:#ff80ab; border-radius:2px; animation:eq 0.8s ease-in-out infinite alternate; }
-    .eq-bar:nth-child(2){animation-delay:0.2s;} .eq-bar:nth-child(3){animation-delay:0.4s;} .eq-bar:nth-child(4){animation-delay:0.15s;}
-    @keyframes eq { from{height:3px;} to{height:14px;} }
-    .eq-bar.paused { animation-play-state:paused; height:4px !important; }
-    #sc-player { display:none; }
-  </style>
+#startBtn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(0,0,0,0.5);border:1px solid rgba(232,213,163,0.4);color:#e8d5a3;font-family:'Lato',sans-serif;font-size:clamp(9px,2.5vw,12px);letter-spacing:0.3em;padding:clamp(8px,2vw,13px) clamp(18px,5vw,30px);cursor:pointer;transition:all 0.3s;text-transform:uppercase;border-radius:2px;}
+#startBtn:hover{background:rgba(232,213,163,0.1);}
+
+/* ── SAHNE 2: ARABA ── */
+#s-araba{background:linear-gradient(180deg,#1a1e2e 0%,#0d1018 50%,#1a1208 100%);}
+/* Araba SVG konteyneri */
+#car-wrap{position:absolute;bottom:20%;left:50%;transform:translateX(-50%);width:clamp(240px,70vw,420px);}
+#car-wrap svg{width:100%;height:auto;}
+/* Araba içi balonlar */
+#ca-bw{position:absolute;bottom:72%;left:18%;font-size:clamp(7px,2vw,10px);}
+#ca-bm{position:absolute;bottom:72%;right:10%;font-size:clamp(7px,2vw,10px);}
+/* Arka plan ışıklar */
+.city-light{position:absolute;border-radius:50%;background:#e8d5a3;animation:tw2 2s ease-in-out infinite;}
+@keyframes tw2{0%,100%{opacity:0.1;}50%{opacity:0.5;}}
+
+/* ── SAHNE 3: EV ── */
+#s-ev{background:linear-gradient(180deg,#1a1408 0%,#2a1e0e 50%,#1a1208 100%);}
+/* Ev içi */
+#room{position:absolute;bottom:9%;left:5%;right:5%;height:75%;background:linear-gradient(180deg,#2a2010 0%,#1e1808 100%);border-radius:4px 4px 0 0;border:2px solid #3a3020;border-bottom:none;}
+/* Zemin */
+#floor{position:absolute;bottom:9%;left:0;width:100%;height:12%;background:linear-gradient(180deg,#4a3a20 0%,#3a2e18 100%);}
+/* Mutfak tezgahı */
+#counter{position:absolute;bottom:calc(9% + 12%);left:5%;width:38%;height:8%;background:#5a4a2a;border-top:3px solid #7a6a3a;border-radius:2px;}
+/* Kanepe */
+#sofa{position:absolute;bottom:calc(9% + 12%);right:5%;width:42%;height:10%;background:#3a3050;border-radius:4px 4px 0 0;border-top:4px solid #4a4060;}
+
+#ev-woman{position:absolute;bottom:calc(9%+12%+10%);left:calc(5% + 2%);}
+#ev-man{position:absolute;bottom:calc(9%+12%+10%);right:calc(5% + 2%);}
+#ev-bw{bottom:102%;left:-5px;}
+#ev-bm{bottom:102%;right:-5px;}
+#ev-bw2{bottom:102%;left:-5px;}
+
+/* Pencere */
+#window{position:absolute;top:15%;right:8%;width:clamp(40px,12vw,70px);height:clamp(50px,14vw,80px);background:linear-gradient(135deg,#0a1020,#1a2040);border:3px solid #5a4a2a;border-radius:2px;}
+#window::after{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:#5a4a2a;}
+#window::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#5a4a2a;}
+
+/* ── SAYAÇ ── */
+#s-sayac{background:#0d0a06;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:12vh 5vw;}
+.studio-txt{font-family:'Lato',sans-serif;font-size:clamp(0.5rem,2vw,0.72rem);letter-spacing:0.35em;color:#5a4e38;text-transform:uppercase;text-align:center;}
+.divider{width:50px;height:1px;background:#3a3020;margin:0 auto;}
+.film-counter{display:flex;gap:clamp(0.6rem,3vw,1.2rem);justify-content:center;flex-wrap:wrap;}
+.fc-box{text-align:center;}
+.fc-num{font-family:'Playfair Display',serif;font-size:clamp(2rem,9vw,3.5rem);color:#e8d5a3;display:block;line-height:1;}
+.fc-lbl{font-family:'Lato',sans-serif;font-size:clamp(0.5rem,2vw,0.65rem);color:#4a4030;letter-spacing:0.2em;text-transform:uppercase;display:block;margin-top:5px;}
+.end-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(0.9rem,3.5vw,1.4rem);color:#8a7a60;text-align:center;max-width:400px;line-height:1.6;}
+.end-name{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(2rem,9vw,4rem);color:#e8d5a3;text-align:center;opacity:0;transition:opacity 1.5s;}
+.end-name.show{opacity:1;}
+
+/* Müzik */
+#sc-player{display:none;}
+.morb{position:fixed;bottom:11%;right:3%;z-index:300;width:32px;height:32px;border-radius:50%;border:1px solid #3a3020;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(13,10,6,0.8);display:none;}
+.eq2{display:flex;align-items:flex-end;gap:2px;height:11px;}
+.eq2b{width:2px;background:#6a5c44;border-radius:1px;animation:eqa 0.8s ease-in-out infinite alternate;}
+.eq2b:nth-child(2){animation-delay:0.2s;}.eq2b:nth-child(3){animation-delay:0.35s;}
+@keyframes eqa{from{height:2px;}to{height:9px;}}
+.eq2b.p{animation-play-state:paused;height:3px!important;}
+
+#fn{position:fixed;bottom:10%;right:3%;font-family:'Lato',sans-serif;font-size:clamp(5px,1.5vw,8px);color:#2a2416;letter-spacing:0.2em;z-index:202;}
+</style>
 </head>
 <body>
-<div id="app">
-  <div class="stars" id="stars"></div>
+<div id="stage">
+  <div id="grain"></div>
+  <div id="vignette"></div>
+  <div class="bar" id="bt"></div>
+  <div class="bar" id="bb"></div>
+  <div class="scratch" style="left:18%;animation-delay:0s;"></div>
+  <div class="scratch" style="left:76%;animation-delay:2.8s;animation-duration:4s;"></div>
 
-  <!-- ENVELOPE -->
-  <p class="hint" id="hintText">✨ dokun, beni aç ✨</p>
-  <div class="envelope-wrap" id="envWrap" onclick="openEnvelope()" role="button" tabindex="0" aria-label="Zarfı aç">
-    <svg class="env-svg" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
-      <!-- Zarf gövdesi -->
-      <rect x="0" y="0" width="300" height="200" rx="8" ry="8" fill="#c2185b"/>
-      <!-- Alt üçgen (V şekli) -->
-      <polygon points="0,200 150,110 300,200" fill="#9c1145"/>
-      <!-- Sol üçgen -->
-      <polygon points="0,0 0,200 120,100" fill="#ad1457"/>
-      <!-- Sağ üçgen -->
-      <polygon points="300,0 300,200 180,100" fill="#880e4f"/>
-      <!-- Üst kapak (flap) — açılır -->
-      <polygon id="flap" points="0,0 300,0 150,105" fill="#e91e8c"/>
-      <!-- Kalp -->
-      <text id="env-heart-emoji" x="150" y="120" text-anchor="middle" font-size="36" style="font-family:sans-serif;">💌</text>
-    </svg>
-  </div>
+  <!-- ARA YAZI (siyah ekran) -->
+  <div id="blackscreen"><div id="bstxt"></div></div>
 
-  <!-- LETTER -->
-  <div class="letter-outer" id="letterOuter">
-    <div class="letter">
-      <span class="letter-name">Canım Ada,</span>
-      <span class="letter-body">
-        Hayatıma girdiğin günden beri her şey çok daha güzel ve anlamlı. Senin gülüşün, en yorucu günlerin bile ardından içimi ısıtmaya yetiyor.<br><br>
-        Bana hissettirdiğin bu huzur ve koşulsuz sevgi için sana ne kadar teşekkür etsem az. Birlikte geçirdiğimiz her an, kalbimde en değerli yerde saklı.<br><br>
-        Seni kelimelerin anlatabileceğinden çok daha fazla seviyorum.
-      </span>
-      <span class="letter-footer">İyi ki varsın, iyi ki benimlesin sevgilim.</span>
-      <span class="letter-rose">🌹</span>
+  <!-- ALTYAZI -->
+  <div id="sub"></div>
+  <div id="fn">000</div>
+
+  <!-- ══════════ SAHNE 1: DURAK ══════════ -->
+  <div class="scene active" id="s-durak">
+    <div id="sky1"></div>
+    <div id="sun"></div>
+
+    <!-- Binalar -->
+    <div class="bldg" id="b1">
+      <div class="bwin" style="width:25%;height:12%;top:15%;left:15%;"></div>
+      <div class="bwin" style="width:25%;height:12%;top:15%;right:15%;"></div>
+      <div class="bwin" style="width:25%;height:12%;top:35%;left:15%;"></div>
+      <div class="bwin" style="width:25%;height:12%;top:35%;right:15%;"></div>
     </div>
-    <p class="scroll-hint">↕ kaydırarak okuyabilirsin</p>
-  </div>
-
-  <!-- COUNTER -->
-  <div class="counter-section" id="counterSection">
-    <p class="counter-label">seninle geçirdiğimiz zaman</p>
-    <div class="counter-grid">
-      <div class="counter-box"><span class="counter-num" id="cDays">0</span><span class="counter-unit">gün</span></div>
-      <div class="counter-box"><span class="counter-num" id="cHours">0</span><span class="counter-unit">saat</span></div>
-      <div class="counter-box"><span class="counter-num" id="cMins">0</span><span class="counter-unit">dakika</span></div>
-      <div class="counter-box"><span class="counter-num" id="cSecs">0</span><span class="counter-unit">saniye</span></div>
+    <div class="bldg" id="b2"></div>
+    <div class="bldg" id="b3">
+      <div class="bwin" style="width:20%;height:10%;top:18%;left:15%;"></div>
+      <div class="bwin" style="width:20%;height:10%;top:18%;right:15%;"></div>
     </div>
-    <p class="counter-sub">ve her biri kalbimde sonsuza kadar 🌸</p>
+    <div class="bldg" id="b4"></div>
+
+    <div id="ground1"></div>
+    <div id="sidewalk1"></div>
+    <div id="road1"></div>
+    <div id="spole"></div>
+    <div id="sboard">D · DURAĞ</div>
+    <div id="bench1"></div>
+    <div id="bl1a"></div>
+    <div id="bl1b"></div>
+
+    <!-- KADIN -->
+    <div class="character" id="woman1">
+      <div class="bubble" id="bw1">Bir sigara verir misiniz?</div>
+      <div class="bubble" id="bw2">Hayır, çalışıyorum.</div>
+      <div class="bubble" id="bw3">Kocatepe 1919.</div>
+      <svg class="char-svg" viewBox="0 0 40 80" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="10" r="7" fill="#c8a87a"/>
+        <ellipse cx="20" cy="6" rx="8" ry="5" fill="#2a1a0a"/>
+        <path d="M12 8 Q10 18 11 22" stroke="#2a1a0a" stroke-width="3" fill="none"/>
+        <path d="M28 8 Q30 18 29 22" stroke="#2a1a0a" stroke-width="3" fill="none"/>
+        <rect x="18" y="17" width="4" height="4" fill="#c8a87a"/>
+        <path d="M10 21 Q20 19 30 21 L28 50 Q20 52 12 50 Z" fill="#c0392b"/>
+        <path d="M10 23 Q6 32 8 38" stroke="#c8a87a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <circle cx="8" cy="38" r="2.5" fill="#c8a87a"/>
+        <path d="M30 23 Q34 30 32 35" stroke="#c8a87a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <circle cx="32" cy="35" r="2.5" fill="#c8a87a"/>
+        <path d="M12 50 Q20 55 28 50 L30 68 Q20 72 10 68 Z" fill="#2c3e50"/>
+        <rect x="14" y="68" width="4" height="6" rx="1" fill="#1a1e14"/>
+        <rect x="22" y="68" width="4" height="6" rx="1" fill="#1a1e14"/>
+        <ellipse cx="16" cy="74" rx="4" ry="2" fill="#1a1208"/>
+        <ellipse cx="24" cy="74" rx="4" ry="2" fill="#1a1208"/>
+      </svg>
+    </div>
+
+    <!-- ERKEK -->
+    <div class="character" id="man1">
+      <div class="bubble" id="bm1">Tabii ki... buyurun.</div>
+      <div class="bubble" id="bm2">Okuyorsunuz mu?</div>
+      <div class="bubble" id="bm3">Nerede çalışıyorsunuz?</div>
+      <svg class="char-svg" viewBox="0 0 40 85" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="20" cy="7" rx="10" ry="2.5" fill="#2a2016"/>
+        <rect x="12" y="3" width="16" height="7" rx="1" fill="#3a3020"/>
+        <circle cx="20" cy="13" r="7" fill="#b89060"/>
+        <rect x="18" y="20" width="4" height="3" fill="#b89060"/>
+        <path d="M10 23 Q20 21 30 23 L29 52 Q20 54 11 52 Z" fill="#2c3e50"/>
+        <path d="M17 23 L20 30 L23 23" stroke="#e8d5a3" stroke-width="1" fill="rgba(232,213,163,0.15)"/>
+        <path d="M10 25 Q4 34 6 40" stroke="#b89060" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <circle cx="6" cy="41" r="2.5" fill="#b89060"/>
+        <rect x="1" y="40" width="9" height="2" rx="1" fill="#f0e8d0" id="cigInHand" style="opacity:0;transition:opacity 0.8s;"/>
+        <path d="M30 25 Q34 34 33 40" stroke="#2c3e50" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M11 52 L13 72 L19 72 L20 58 L21 72 L27 72 L29 52 Z" fill="#1a1610"/>
+        <ellipse cx="15" cy="73" rx="4.5" ry="2" fill="#0d0a06"/>
+        <ellipse cx="25" cy="73" rx="4.5" ry="2" fill="#0d0a06"/>
+      </svg>
+    </div>
+
+    <div id="smokeC"></div>
+    <button id="startBtn" onclick="startScene()">▶ &nbsp; SAHNEYİ BAŞLAT</button>
   </div>
-</div>
 
-<iframe id="sc-player"
-  src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/takeiteasyrec/sherine-batmanna-ansak-tiktok-remix-2025&color=%23e91e8c&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"
-  width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"></iframe>
+  <!-- ══════════ SAHNE 2: ARABA ══════════ -->
+  <div class="scene" id="s-araba">
+    <!-- Şehir ışıkları arka plan -->
+    <div style="position:absolute;top:9%;left:0;width:100%;height:50%;overflow:hidden;" id="cityBg"></div>
 
-<div class="music-bar" onclick="toggleMusic()">
-  <span style="font-size:1rem;">🎵</span>
-  <span class="music-note">Batmanna Ansak</span>
-  <div class="equalizer">
-    <div class="eq-bar paused"></div>
-    <div class="eq-bar paused"></div>
-    <div class="eq-bar paused"></div>
-    <div class="eq-bar paused"></div>
+    <!-- Araba -->
+    <div id="car-wrap">
+      <div class="bubble" id="ca-bw">Ayrılmalıyız.</div>
+      <div class="bubble" id="ca-bm">Düzeltebiliriz bunu.</div>
+      <div class="bubble" id="ca-bw2" style="bottom:102%;left:15%;">Ben kendimi iyi hissetmiyorum.</div>
+      <div class="bubble" id="ca-bm2" style="bottom:102%;right:8%;">Beraber aşabiliriz.</div>
+      <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Araba gövdesi -->
+        <rect x="30" y="100" width="360" height="90" rx="12" fill="#2a2a3a"/>
+        <!-- Kabin -->
+        <path d="M90 100 Q110 50 170 45 L260 45 Q320 50 340 100 Z" fill="#222232"/>
+        <!-- Ön cam -->
+        <path d="M180 48 Q210 40 250 48 L310 95 L115 95 Z" fill="#1a2a3a" opacity="0.8"/>
+        <!-- Yan cam sol (kız tarafı) -->
+        <rect x="95" y="52" width="75" height="42" rx="4" fill="#1a2a3a" opacity="0.7"/>
+        <!-- Yan cam sağ (erkek tarafı) -->
+        <rect x="258" y="52" width="75" height="42" rx="4" fill="#1a2a3a" opacity="0.7"/>
+        <!-- Tekerlekler -->
+        <circle cx="100" cy="192" r="28" fill="#1a1a1a"/>
+        <circle cx="100" cy="192" r="14" fill="#2a2a2a"/>
+        <circle cx="320" cy="192" r="28" fill="#1a1a1a"/>
+        <circle cx="320" cy="192" r="14" fill="#2a2a2a"/>
+        <!-- Farlar -->
+        <ellipse cx="52" cy="135" rx="12" ry="8" fill="#e8d5a3" opacity="0.3"/>
+        <ellipse cx="368" cy="135" rx="12" ry="8" fill="#ff4444" opacity="0.4"/>
+        <!-- KIZ — koltukta -->
+        <circle cx="155" cy="72" r="10" fill="#c8a87a"/>
+        <ellipse cx="155" cy="68" rx="11" ry="7" fill="#2a1a0a"/>
+        <rect x="148" y="82" width="14" height="18" rx="2" fill="#c0392b"/>
+        <!-- ERKEK — koltukta -->
+        <circle cx="268" cy="72" r="10" fill="#b89060"/>
+        <rect x="259" y="64" width="18" height="10" rx="2" fill="#3a3020"/>
+        <rect x="261" y="82" width="14" height="18" rx="2" fill="#2c3e50"/>
+        <!-- Direksiyon -->
+        <circle cx="230" cy="95" r="12" fill="none" stroke="#4a4030" stroke-width="3"/>
+        <line x1="230" y1="83" x2="230" y2="107" stroke="#4a4030" stroke-width="2"/>
+        <line x1="218" y1="95" x2="242" y2="95" stroke="#4a4030" stroke-width="2"/>
+      </svg>
+    </div>
+    <!-- Yol -->
+    <div style="position:absolute;bottom:9%;left:0;width:100%;height:15%;background:linear-gradient(180deg,#2a2416 0%,#1a1810 100%);border-top:1px solid #3a3020;"></div>
+    <!-- Yol çizgileri -->
+    <div style="position:absolute;bottom:14%;left:0;width:100%;height:2px;background:repeating-linear-gradient(90deg,#5a5040 0px,#5a5040 40px,transparent 40px,transparent 80px);opacity:0.4;"></div>
+  </div>
+
+  <!-- ══════════ SAHNE 3: EV ══════════ -->
+  <div class="scene" id="s-ev">
+    <div id="floor"></div>
+    <div id="room">
+      <div id="window"></div>
+    </div>
+    <div id="counter"></div>
+    <div id="sofa"></div>
+
+    <!-- Ev kadın (mutfak) -->
+    <div class="character" id="ev-woman" style="bottom:calc(9% + 12% + 10%);left:12%;">
+      <div class="bubble" id="ev-bw">Ekmek alırmışım.</div>
+      <div class="bubble" id="ev-bw2">😊</div>
+      <svg class="char-svg" viewBox="0 0 40 80" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="10" r="7" fill="#c8a87a"/>
+        <ellipse cx="20" cy="6" rx="8" ry="5" fill="#2a1a0a"/>
+        <path d="M12 8 Q10 18 11 22" stroke="#2a1a0a" stroke-width="3" fill="none"/>
+        <rect x="18" y="17" width="4" height="4" fill="#c8a87a"/>
+        <path d="M10 21 Q20 19 30 21 L28 50 Q20 52 12 50 Z" fill="#e74c3c"/>
+        <path d="M10 23 Q6 32 8 38" stroke="#c8a87a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <circle cx="8" cy="38" r="2.5" fill="#c8a87a"/>
+        <path d="M30 23 Q28 32 30 38" stroke="#c8a87a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <!-- tencere -->
+        <rect x="2" y="33" width="10" height="8" rx="1" fill="#7a7a8a"/>
+        <rect x="0" y="33" width="3" height="2" rx="1" fill="#5a5a6a"/>
+        <path d="M12 50 Q20 55 28 50 L30 68 Q20 72 10 68 Z" fill="#2c3e50"/>
+        <rect x="14" y="68" width="4" height="6" rx="1" fill="#1a1e14"/>
+        <rect x="22" y="68" width="4" height="6" rx="1" fill="#1a1e14"/>
+        <ellipse cx="16" cy="74" rx="4" ry="2" fill="#1a1208"/>
+        <ellipse cx="24" cy="74" rx="4" ry="2" fill="#1a1208"/>
+      </svg>
+    </div>
+
+    <!-- Ev erkek (kanepe) -->
+    <div class="character" id="ev-man" style="bottom:calc(9% + 12% + 10%);right:12%;">
+      <div class="bubble" id="ev-bm">Tamam hayatım, alırım.</div>
+      <svg class="char-svg" viewBox="0 0 40 85" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="20" cy="7" rx="10" ry="2.5" fill="#2a2016"/>
+        <rect x="12" y="3" width="16" height="7" rx="1" fill="#3a3020"/>
+        <circle cx="20" cy="13" r="7" fill="#b89060"/>
+        <rect x="18" y="20" width="4" height="3" fill="#b89060"/>
+        <path d="M10 23 Q20 21 30 23 L29 52 Q20 54 11 52 Z" fill="#34495e"/>
+        <!-- uzanmış kol -->
+        <path d="M10 28 Q2 36 4 46" stroke="#b89060" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <circle cx="4" cy="47" r="2.5" fill="#b89060"/>
+        <path d="M30 28 Q38 36 36 46" stroke="#b89060" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M11 52 L14 72 L20 72 L20 58 L20 72 L26 72 L29 52 Z" fill="#1a1610"/>
+        <ellipse cx="15" cy="73" rx="4.5" ry="2" fill="#0d0a06"/>
+        <ellipse cx="25" cy="73" rx="4.5" ry="2" fill="#0d0a06"/>
+      </svg>
+    </div>
+
+    <!-- Ev arka ışık -->
+    <div style="position:absolute;top:20%;left:30%;width:clamp(60px,20vw,120px);height:clamp(40px,12vw,70px);background:rgba(255,220,150,0.05);border-radius:50%;filter:blur(20px);pointer-events:none;"></div>
+  </div>
+
+  <!-- ══════════ SAHNE 4: SAYAÇ ══════════ -->
+  <div class="scene" id="s-sayac">
+    <p class="studio-txt">24 Kasım 2025'ten beri</p>
+    <div class="divider"></div>
+    <div class="film-counter">
+      <div class="fc-box"><span class="fc-num" id="cD">0</span><span class="fc-lbl">gün</span></div>
+      <div class="fc-box"><span class="fc-num" id="cH">0</span><span class="fc-lbl">saat</span></div>
+      <div class="fc-box"><span class="fc-num" id="cM">0</span><span class="fc-lbl">dakika</span></div>
+      <div class="fc-box"><span class="fc-num" id="cS">0</span><span class="fc-lbl">saniye</span></div>
+    </div>
+    <div class="divider"></div>
+    <p class="end-quote">Seni kelimelerin anlatabileceğinden çok daha fazla seviyorum.</p>
+    <div class="end-name" id="endName">İyi ki varsın, Ada. 🌹</div>
+  </div>
+
+  <!-- Müzik -->
+  <iframe id="sc-player"
+    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/takeiteasyrec/sherine-batmanna-ansak-tiktok-remix-2025&color=%23e8d5a3&auto_play=false&hide_related=true&show_comments=false&show_user=false"
+    width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"></iframe>
+
+  <div class="morb" id="morb" onclick="toggleMusic()">
+    <div class="eq2">
+      <div class="eq2b p"></div><div class="eq2b p"></div><div class="eq2b p"></div>
+    </div>
   </div>
 </div>
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
-  // Yıldızlar
-  const starsEl = document.getElementById('stars');
-  for (let i = 0; i < 100; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const sz = Math.random()*2.5+0.5;
-    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${(Math.random()*3+2).toFixed(1)}s;animation-delay:${(Math.random()*5).toFixed(1)}s;`;
-    starsEl.appendChild(s);
-  }
+// ── Yardımcılar ──
+function showSub(txt){
+  const el=document.getElementById('sub');
+  el.classList.remove('show');
+  setTimeout(()=>{el.textContent=txt;el.classList.add('show');},300);
+}
+function hideSub(){ document.getElementById('sub').classList.remove('show'); }
 
-  // SoundCloud
-  let widget=null, playing=false;
-  const eqBars = document.querySelectorAll('.eq-bar');
-  function initSC() {
-    if (typeof SC==='undefined'||widget) return;
-    try {
-      widget = SC.Widget(document.getElementById('sc-player'));
-      widget.bind(SC.Widget.Events.READY, ()=>widget.setVolume(80));
-      widget.bind(SC.Widget.Events.PLAY,  ()=>{ playing=true;  eqBars.forEach(b=>b.classList.remove('paused')); });
-      widget.bind(SC.Widget.Events.PAUSE, ()=>{ playing=false; eqBars.forEach(b=>b.classList.add('paused')); });
-      widget.bind(SC.Widget.Events.FINISH,()=>{ widget.seekTo(0); widget.play(); });
-    } catch(e){}
-  }
-  window.addEventListener('load', ()=>setTimeout(initSC,800));
+function bubble(id){ const el=document.getElementById(id);if(!el)return;el.classList.add('show');return el; }
+function unbubble(id){ const el=document.getElementById(id);if(el)el.classList.remove('show'); }
+function bubbleFor(id,dur=4000){ bubble(id);setTimeout(()=>unbubble(id),dur); }
 
-  function tryPlay() { if(!widget){initSC();setTimeout(tryPlay,1000);return;} widget.play(); }
-  function toggleMusic() { if(!widget){initSC();setTimeout(()=>widget&&widget.play(),800);return;} playing?widget.pause():widget.play(); }
+function showScene(id){
+  document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-  // Kalp yağmuru
-  const emojis=['💗','💖','💕','🌸','✨','💓','🌹','💝'];
-  function spawnHeart() {
-    const h=document.createElement('div');
-    h.className='heart-particle';
-    h.textContent=emojis[Math.floor(Math.random()*emojis.length)];
-    h.style.left=(Math.random()*86+4)+'vw';
-    h.style.bottom='0';
-    h.style.animationDuration=(Math.random()*1.8+2.5)+'s';
-    document.body.appendChild(h);
-    setTimeout(()=>h.remove(),4500);
-  }
-  function startHeartRain() {
-    for(let i=0;i<5;i++) setTimeout(spawnHeart,i*150);
-    const iv=setInterval(spawnHeart,350);
-    setTimeout(()=>clearInterval(iv),7000);
-  }
+function blackIn(txt,cb,holdMs=2200){
+  const bs=document.getElementById('blackscreen');
+  const bt=document.getElementById('bstxt');
+  bs.classList.add('show');
+  hideSub();
+  setTimeout(()=>{ bt.textContent=txt; bt.classList.add('show'); },600);
+  setTimeout(()=>{ bt.classList.remove('show'); },holdMs);
+  setTimeout(()=>{ bs.classList.remove('show'); if(cb)cb(); },holdMs+1200);
+}
 
-  // Zarf aç
-  let opened=false;
-  function openEnvelope() {
-    if(opened) return;
-    opened=true;
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-    // hint kaybol
-    document.getElementById('hintText').style.transition='opacity 0.4s';
-    document.getElementById('hintText').style.opacity='0';
+// ── Frame counter ──
+let fr=0;
+setInterval(()=>{ fr=(fr+1)%1000; document.getElementById('fn').textContent=String(fr).padStart(3,'0'); },42);
 
-    // flap aç
-    document.getElementById('flap').classList.add('open');
-
-    // kalp kaybol
+// ── Duman ──
+function spawnSmoke(){
+  const manEl=document.getElementById('man1');
+  const rect=manEl.getBoundingClientRect();
+  const c=document.getElementById('smokeC');
+  for(let i=0;i<2;i++){
     setTimeout(()=>{
-      document.getElementById('env-heart-emoji').style.opacity='0';
-    }, 350);
-
-    // zarf kaybol, mektup belir
-    setTimeout(()=>{
-      const wrap = document.getElementById('envWrap');
-      wrap.style.transition='opacity 0.5s, transform 0.5s';
-      wrap.style.opacity='0';
-      wrap.style.transform='scale(0.9)';
-    }, 800);
-
-    setTimeout(()=>{
-      document.getElementById('envWrap').style.display='none';
-      document.getElementById('hintText').style.display='none';
-
-      const lo=document.getElementById('letterOuter');
-      lo.style.display='block';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>lo.classList.add('show')));
-    }, 1300);
-
-    // sayaç + kalpler + müzik
-    setTimeout(()=>{
-      document.getElementById('counterSection').classList.add('show');
-      startHeartRain();
-      tryPlay();
-    }, 1800);
+      const s=document.createElement('div');s.className='smoke-p';
+      const sz=7+Math.random()*10;
+      s.style.cssText=`width:${sz}px;height:${sz}px;position:fixed;left:${rect.left+4+Math.random()*8}px;top:${rect.top+8}px;animation-delay:${Math.random()*0.3}s;z-index:15;`;
+      c.appendChild(s);setTimeout(()=>s.remove(),3300);
+    },i*500);
   }
+}
+let smokeIv=null;
 
-  document.getElementById('envWrap').addEventListener('keydown',e=>{
-    if(e.key==='Enter'||e.key===' ') openEnvelope();
-  });
+// ── Şehir ışıkları ──
+const cityBg=document.getElementById('cityBg');
+for(let i=0;i<30;i++){
+  const l=document.createElement('div');l.className='city-light';
+  const sz=Math.random()*3+1;
+  l.style.cssText=`width:${sz}px;height:${sz}px;position:absolute;top:${Math.random()*90}%;left:${Math.random()*100}%;animation-duration:${(Math.random()*2+1.5).toFixed(1)}s;animation-delay:${(Math.random()*2).toFixed(1)}s;`;
+  cityBg.appendChild(l);
+}
 
-  // Sayaç
-  const startDate=new Date(2025,10,24);
-  function updateCounter() {
-    const diff=Math.max(0,Date.now()-startDate.getTime());
-    document.getElementById('cDays').textContent  =Math.floor(diff/86400000);
-    document.getElementById('cHours').textContent =Math.floor((diff%86400000)/3600000);
-    document.getElementById('cMins').textContent  =Math.floor((diff%3600000)/60000);
-    document.getElementById('cSecs').textContent  =Math.floor((diff%60000)/1000);
-  }
-  updateCounter();
-  setInterval(updateCounter,1000);
+// ── Sayaç ──
+const startDate=new Date(2025,10,24);
+function updateC(){
+  const diff=Math.max(0,Date.now()-startDate.getTime());
+  document.getElementById('cD').textContent=Math.floor(diff/86400000);
+  document.getElementById('cH').textContent=Math.floor((diff%86400000)/3600000);
+  document.getElementById('cM').textContent=Math.floor((diff%3600000)/60000);
+  document.getElementById('cS').textContent=Math.floor((diff%60000)/1000);
+}
+updateC(); setInterval(updateC,1000);
+
+// ── Müzik ──
+let widget=null,playing=false;
+const eqBars=document.querySelectorAll('.eq2b');
+function initSC(){
+  if(typeof SC==='undefined'||widget)return;
+  try{
+    widget=SC.Widget(document.getElementById('sc-player'));
+    widget.bind(SC.Widget.Events.READY,()=>widget.setVolume(75));
+    widget.bind(SC.Widget.Events.PLAY,()=>{playing=true;eqBars.forEach(b=>b.classList.remove('p'));});
+    widget.bind(SC.Widget.Events.PAUSE,()=>{playing=false;eqBars.forEach(b=>b.classList.add('p'));});
+    widget.bind(SC.Widget.Events.FINISH,()=>{widget.seekTo(0);widget.play();});
+  }catch(e){}
+}
+window.addEventListener('load',()=>setTimeout(initSC,800));
+function tryPlay(){if(!widget){initSC();setTimeout(tryPlay,1000);return;}widget.play();}
+function toggleMusic(){if(!widget){initSC();setTimeout(()=>widget&&widget.play(),800);return;}playing?widget.pause():widget.play();}
+
+// ══════════════════════════════════════════
+//  ANA SENARYO
+// ══════════════════════════════════════════
+async function startScene(){
+  document.getElementById('startBtn').style.display='none';
+
+  // Sahne 1 — Durak
+  showSub('Öğlen... Kalabalık bir dolmuş durağı.');
+  await wait(3500);
+
+  showSub('İki yabancı, aynı bankta bekliyorlar.');
+  await wait(3500);
+
+  // Sigara sahnesi
+  bubbleFor('bw1',4000);
+  showSub('"Bir sigara verir misiniz?"');
+  await wait(4500);
+
+  document.getElementById('cigInHand').style.opacity='1';
+  bubbleFor('bm1',4000);
+  showSub('"Tabii ki... buyurun."');
+  smokeIv=setInterval(spawnSmoke,1300);
+  await wait(4500);
+
+  // Okuyorum mu sorusu
+  bubbleFor('bm2',4000);
+  showSub('"Okuyorsunuz mu?"');
+  await wait(4500);
+
+  bubbleFor('bw2',4000);
+  showSub('"Hayır, çalışıyorum."');
+  await wait(4000);
+
+  bubbleFor('bm3',4000);
+  showSub('"Nerede çalışıyorsunuz?"');
+  await wait(4000);
+
+  bubbleFor('bw3',4000);
+  showSub('"Kocatepe 1919."');
+  await wait(4500);
+
+  clearInterval(smokeIv);
+  hideSub();
+  await wait(1000);
+
+  // ── Geçiş: 3 AY SONRA ──
+  blackIn('3 ay sonra...', async ()=>{
+
+    // Sahne 2 — Araba
+    showScene('s-araba');
+    tryPlay();
+    document.getElementById('morb').style.display='flex';
+
+    await wait(1800);
+    showSub('Beyaz bir araba, sessiz bir gece...');
+    await wait(3500);
+
+    bubbleFor('ca-bw',4000);
+    showSub('"Ayrılmalıyız."');
+    await wait(4500);
+
+    bubbleFor('ca-bm',4000);
+    showSub('"Düzeltebiliriz bunu."');
+    await wait(4500);
+
+    bubbleFor('ca-bw2',4500);
+    showSub('"Ben kendimi iyi hissetmiyorum."');
+    await wait(5000);
+
+    bubbleFor('ca-bm2',4500);
+    showSub('"Beraber aşabiliriz."');
+    await wait(5000);
+
+    hideSub();
+    await wait(1000);
+
+    // ── Geçiş: 3 AY DAHA SONRA ──
+    blackIn('3 ay sonra...', async ()=>{
+
+      // Sahne 3 — Ev
+      showScene('s-ev');
+      await wait(1800);
+
+      showSub('Sıcak bir ev... akşam saatleri.');
+      await wait(3500);
+
+      showSub('Kız mutfakta yemek yapıyor, oğlan uzanıyor...');
+      await wait(3500);
+
+      bubbleFor('ev-bw',4500);
+      showSub('"Ekmek alırmışım."');
+      await wait(5000);
+
+      bubbleFor('ev-bm',4500);
+      showSub('"Tamam hayatım, alırım." 😊');
+      await wait(500);
+      bubbleFor('ev-bw2',3000);
+      await wait(5000);
+
+      hideSub();
+      await wait(1500);
+
+      // ── Sahne 4: Sayaç ──
+      showScene('s-sayac');
+      await wait(2500);
+      setTimeout(()=>document.getElementById('endName').classList.add('show'),2500);
+
+    }, 2800);
+
+  }, 2800);
+}
 </script>
 </body>
 </html>
